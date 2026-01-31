@@ -136,9 +136,14 @@ describe("anchor_escrow_q4_25", () => {
       })
       .rpc();
 
-    // Setup for take
+    // Setup for take - create missing ATAs
     takerAtaA = getAssociatedTokenAddressSync(mintA, taker.publicKey);
     makerAtaB = getAssociatedTokenAddressSync(mintB, maker);
+
+    const createAtasTx = new anchor.web3.Transaction()
+      .add(createAssociatedTokenAccountInstruction(taker.publicKey, takerAtaA, taker.publicKey, mintA))
+      .add(createAssociatedTokenAccountInstruction(taker.publicKey, makerAtaB, maker, mintB));
+    await provider.sendAndConfirm(createAtasTx, [taker]);
 
     // Take
     await program.methods
@@ -155,7 +160,6 @@ describe("anchor_escrow_q4_25", () => {
         vault: vault,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([taker])
       .rpc();
