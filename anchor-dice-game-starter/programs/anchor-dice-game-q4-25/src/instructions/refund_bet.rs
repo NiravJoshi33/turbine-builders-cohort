@@ -20,6 +20,7 @@ pub struct RefundBet<'info> {
     #[account(
         mut,
         close = player,
+        has_one = player,
         seeds = [b"bet", vault.key().as_ref(), bet.seed.to_le_bytes().as_ref()],
         bump = bet.bump
     )]
@@ -30,7 +31,7 @@ pub struct RefundBet<'info> {
 impl<'info> RefundBet<'info> {
     pub fn refund_bet(&mut self, bumps: &RefundBetBumps) -> Result<()> {
         let slot = Clock::get()?.slot;
-        require!((self.bet.slot - slot) > 1000, DiceError::TimeoutNotReached);
+        require!((slot - self.bet.slot) > 1000, DiceError::TimeoutNotReached);
         let accounts = Transfer {
             from: self.vault.to_account_info(),
             to: self.player.to_account_info(),
